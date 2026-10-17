@@ -1,0 +1,79 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #eae7de; font-family: 'Inter', system-ui, sans-serif; padding: 30px 20px; }
+  .toolbar { max-width: 900px; margin: 0 auto 24px; display: flex; justify-content: space-between; align-items: center; }
+  .toolbar h1 { font-family: 'Fraunces', Georgia, serif; font-size: 24px; color: #233d2b; }
+  .toolbar button {
+    background: #2e5339; color: #fbf9f4; border: none; border-radius: 10px;
+    padding: 12px 22px; font-size: 15px; font-weight: 700; cursor: pointer;
+  }
+  .posters { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+  .poster {
+    border-radius: 20px; padding: 44px 34px; text-align: center;
+    box-shadow: 0 6px 24px rgba(0,0,0,.12);
+    page-break-inside: avoid;
+  }
+  .poster.out { background: #233d2b; color: #fbf9f4; }
+  .poster.back { background: #fbf9f4; color: #233d2b; border: 3px solid #c9a24b; }
+  .poster .tag { font-size: 12px; letter-spacing: .25em; text-transform: uppercase; font-weight: 700; }
+  .poster.out .tag { color: #c9a24b; }
+  .poster.back .tag { color: #b97a2a; }
+  .poster h2 { font-family: 'Fraunces', Georgia, serif; font-size: 40px; font-weight: 650; margin: 10px 0 4px; }
+  .poster .emoji { font-size: 56px; margin: 8px 0 2px; }
+  .poster p { font-size: 16px; opacity: .85; margin-bottom: 24px; }
+  .qr {
+    background: #fff; display: inline-block; padding: 18px; border-radius: 16px;
+  }
+  .qr img, .qr canvas { display: block; }
+  .poster .hint { margin-top: 22px; font-size: 14px; opacity: .75; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .toolbar { display: none; }
+    .posters { display: block; }
+    .poster { border-radius: 0; box-shadow: none; margin: 0; min-height: 96vh;
+              display: flex; flex-direction: column; justify-content: center; align-items: center; }
+  }
+  @media (max-width: 760px) { .posters { grid-template-columns: 1fr; } }
+</style>
+
+<div class="toolbar">
+  <h1>QR Posters — print, laminate, mount 🐾</h1>
+  <button onclick="window.print()">🖨️ Print</button>
+</div>
+
+<div class="posters">
+  <div class="poster out">
+    <div class="emoji">🐕‍🦺</div>
+    <div class="tag"><?= orgName ?></div>
+    <h2>Taking a friend out?</h2>
+    <p>Scan to check an animal out of its enclosure</p>
+    <div class="qr" id="qrOut"></div>
+    <div class="hint">Point your camera here · takes 10 seconds</div>
+  </div>
+
+  <div class="poster back">
+    <div class="emoji">🏡</div>
+    <div class="tag"><?= orgName ?></div>
+    <h2>I'm back!</h2>
+    <p>Scan to tuck your friend back in &amp; share how it went</p>
+    <div class="qr" id="qrIn"></div>
+    <div class="hint">Point your camera here · takes 30 seconds</div>
+  </div>
+</div>
+
+<script>
+  var base = '<?= appUrl ?>';
+  new QRCode(document.getElementById('qrOut'), {
+    text: base + '?page=out', width: 220, height: 220,
+    colorDark: '#233d2b', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.L,
+  });
+  new QRCode(document.getElementById('qrIn'), {
+    text: base + '?page=in', width: 220, height: 220,
+    colorDark: '#233d2b', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.L,
+  });
+</script>

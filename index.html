@@ -1,0 +1,276 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Who Has The Kangaroo? — Free Check-Out System (Build It With AI, Ep 1)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f7f1;
+    --card: #ffffff;
+    --ink: #22301f;
+    --muted: #67735f;
+    --line: #d9e0d2;
+    --deep: #233d2b;
+    --forest: #2e5339;
+    --gold: #c9a24b;
+    --gold-ink: #8a6a24;
+    --band-text: #fbf9f4;
+    --band-sub: #cfdac9;
+    --code-bg: #edf0e7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #171f19;
+      --card: #202b22;
+      --ink: #e6ebe0;
+      --muted: #9aa791;
+      --line: #35422f;
+      --deep: #10180f;
+      --forest: #86ab8f;
+      --gold: #d3af62;
+      --gold-ink: #d3af62;
+      --band-text: #f3f1e8;
+      --band-sub: #9fb39a;
+      --code-bg: #131b14;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #171f19;
+    --card: #202b22;
+    --ink: #e6ebe0;
+    --muted: #9aa791;
+    --line: #35422f;
+    --deep: #10180f;
+    --forest: #86ab8f;
+    --gold: #d3af62;
+    --gold-ink: #d3af62;
+    --band-text: #f3f1e8;
+    --band-sub: #9fb39a;
+    --code-bg: #131b14;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 16px; line-height: 1.6;
+  }
+  .band {
+    background: var(--deep); color: var(--band-text);
+    padding: 52px 24px 44px; border-bottom: 3px solid var(--gold);
+  }
+  .band-inner { max-width: 720px; margin: 0 auto; }
+  .eyebrow {
+    font-size: 12px; letter-spacing: .24em; text-transform: uppercase;
+    color: var(--gold); font-weight: 600;
+  }
+  .band h1 {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 650;
+    font-size: clamp(30px, 5vw, 42px); line-height: 1.12; text-wrap: balance;
+    margin: 10px 0 12px;
+  }
+  .band p { color: var(--band-sub); max-width: 58ch; }
+  main { max-width: 720px; margin: 0 auto; padding: 12px 24px 90px; }
+  section { margin-top: 52px; }
+  h2 {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 650; font-size: 25px;
+    color: var(--ink); text-wrap: balance;
+    display: flex; align-items: baseline; gap: 12px;
+  }
+  h2::after { content: ""; flex: 1; height: 1px; background: var(--line); transform: translateY(-6px); }
+  section > p { margin-top: 12px; max-width: 65ch; }
+  p + p { margin-top: 10px; }
+  .muted { color: var(--muted); }
+  code, .mono {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: .88em;
+    background: var(--code-bg); border-radius: 5px; padding: 2px 6px;
+  }
+  a { color: var(--gold-ink); }
+
+  /* Flow diagram */
+  .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 10px; align-items: stretch; margin-top: 22px; }
+  .flow .node {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px 16px; text-align: center;
+  }
+  .flow .node .t { font-weight: 700; font-size: 14px; }
+  .flow .node .d { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+  .flow .arrow { align-self: center; color: var(--gold); font-size: 20px; }
+  @media (max-width: 620px) {
+    .flow { grid-template-columns: 1fr; }
+    .flow .arrow { transform: rotate(90deg); justify-self: center; }
+  }
+
+  /* Cards / pages list */
+  .pages { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; }
+  @media (max-width: 620px) { .pages { grid-template-columns: 1fr; } }
+  .page-card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px;
+  }
+  .page-card .url { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; color: var(--gold-ink); }
+  .page-card h3 { font-size: 16.5px; margin: 6px 0 6px; }
+  .page-card p { font-size: 14px; color: var(--muted); }
+
+  /* Steps — a true sequence, so numbers carry meaning */
+  ol.steps { list-style: none; margin-top: 24px; counter-reset: step; }
+  ol.steps li {
+    counter-increment: step; position: relative;
+    padding: 0 0 26px 58px;
+  }
+  ol.steps li::before {
+    content: counter(step);
+    position: absolute; left: 0; top: -2px;
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--forest); color: var(--paper);
+    font-weight: 700; font-size: 17px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  ol.steps li:not(:last-child)::after {
+    content: ""; position: absolute; left: 19px; top: 42px; bottom: 6px;
+    width: 1px; background: var(--line);
+  }
+  ol.steps h3 { font-size: 17px; margin-bottom: 5px; }
+  ol.steps p { font-size: 15px; color: var(--muted); max-width: 60ch; }
+
+  table { border-collapse: collapse; width: 100%; margin-top: 20px; font-size: 14.5px; }
+  .table-wrap { overflow-x: auto; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  th { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  td:first-child { font-weight: 600; }
+  .no { color: var(--muted); }
+  .yes { color: var(--gold-ink); font-weight: 600; }
+
+  ul.plain { margin-top: 14px; padding-left: 0; list-style: none; }
+  ul.plain li { padding: 9px 0 9px 26px; position: relative; border-bottom: 1px dashed var(--line); font-size: 15px; }
+  ul.plain li::before { content: "🐾"; position: absolute; left: 0; font-size: 13px; top: 12px; }
+
+  .callout {
+    margin-top: 22px; background: var(--card); border: 1px solid var(--line);
+    border-left: 4px solid var(--gold); border-radius: 10px; padding: 16px 20px;
+    font-size: 15px;
+  }
+</style>
+<div style="background:#16201a;color:#f4efe6;padding:14px 20px;font:500 15px Inter,Arial,sans-serif;text-align:center;line-height:1.7">
+Build It With AI · Episode 1 — <b>Who Has The Kangaroo?</b> &nbsp;·&nbsp;
+<a href="who-has-the-kangaroo.zip" style="color:#9fd8b0;font-weight:700">Download everything (.zip)</a> &nbsp;·&nbsp;
+<a href="CLAUDE_PROMPT.txt" style="color:#9fd8b0">The prompts</a> &nbsp;·&nbsp;
+<a href="apps-script/Code.gs" style="color:#9fd8b0">The code</a></div>
+
+
+<div class="band">
+  <div class="band-inner">
+    <div class="eyebrow">Google Sheets · Apps Script · Zero subscriptions</div>
+    <h1>Enclosure Check-Out Studio</h1>
+    <p>A QR-driven check-out and check-in system for your animals. Staff scan a poster,
+    tap twice, and the master dashboard always knows who is out, with whom, and for
+    exactly how long.</p>
+  </div>
+</div>
+
+<main>
+  
+
+  <section>
+    <h2>How it flows</h2>
+    <div class="flow">
+      <div class="node"><div class="t">📱 Scan the OUT poster</div>
+        <div class="d">Greeted by name · tap an available animal · outing starts</div></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="t">📊 The Sheet logs everything</div>
+        <div class="d">Who, which animal, timestamp, running timer on the dashboard</div></div>
+      <div class="arrow">→</div>
+      <div class="node"><div class="t">🏡 Scan the BACK poster</div>
+        <div class="d">Their animal is pre-selected · checklist + comments · tucked in</div></div>
+    </div>
+    <p class="muted" style="margin-top:16px">The two posters are generated for you, print-ready. Everything lives in your own
+    Google account — no accounts to buy, nothing to install on the iPads.</p>
+  </section>
+
+  <section>
+    <h2>Why not plain Google Forms?</h2>
+    <p>The three features you asked for are exactly the ones a static Google Form cannot do.
+    An Apps Script web app is Google's own free upgrade path: it opens from a QR code like a
+    form, writes to the same spreadsheet — and it can think.</p>
+    <div class="table-wrap"><table>
+      <tr><th>Requirement</th><th>Google Form</th><th>This web app</th></tr>
+      <tr><td>Remembers the person's device</td><td class="no">Impossible</td><td class="yes">Greets them by name, "Not you?" to switch</td></tr>
+      <tr><td>Hides animals already out</td><td class="no">Static list</td><td class="yes">List rebuilt live from the log</td></tr>
+      <tr><td>Knows which animal to check in</td><td class="no">Impossible</td><td class="yes">Looked up from their open outing</td></tr>
+      <tr><td>Playmates limited to overlapping animals</td><td class="no">Impossible</td><td class="yes">Computed from the log's time windows</td></tr>
+      <tr><td>Two people grabbing the same animal</td><td class="no">Both succeed</td><td class="yes">Locked — second person gets a friendly retry</td></tr>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>The four pages</h2>
+    <div class="pages">
+      <div class="page-card"><span class="url">…/exec?page=out</span>
+        <h3>Taking a friend out?</h3><p>Name chips (pre-selected on a known device), animals grouped by
+        species — Chinchillas, Hedgehogs, Sugar Gliders, Lemurs… — with already-out animals hidden,
+        one big Start button.</p></div>
+      <div class="page-card"><span class="url">…/exec?page=in</span>
+        <h3>Welcome back</h3><p>Recognizes the person, pre-selects their animal, activity checklist
+        (pee, poop, zoomies…), overlap-aware playmate picker, comments, done.</p></div>
+      <div class="page-card"><span class="url">…/exec?page=board</span>
+        <h3>Interactive dashboard</h3><p>Live view with second-by-second timers (green &lt; 1 h, amber,
+        red past 2 h), plus tap-through Animals, Staff, and searchable History views — every animal and
+        person opens a full detail card with stats and outing history. Refreshes itself.</p></div>
+      <div class="page-card"><span class="url">…/exec?page=qr</span>
+        <h3>QR posters</h3><p>The two posters, styled and print-ready with generated QR codes.
+        Print, laminate, mount by the enclosures.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>The spreadsheet</h2>
+    <ul class="plain">
+      <li><strong>Dashboard</strong> — stat tiles (out now · today · this month · this year · average
+        outing), a live <em>Out Right Now</em> table with elapsed times, a <em>Staff Spotlight</em>
+        dropdown that shows any person's complete outing history with dates, durations and comments,
+        and monthly leaderboards for handlers and animals.</li>
+      <li><strong>Log</strong> — one row per outing. Open outings glow gold until the animal is back.</li>
+      <li><strong>Animals</strong> — the roster. Status, who has them, and since when fill themselves in.</li>
+      <li><strong>People</strong> — staff &amp; volunteers. Untick <em>Active</em> to hide someone from the forms.</li>
+      <li><strong>Read Me</strong> — crib notes for whoever runs the system day to day.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>How it was set up (for reference — already done)</h2>
+    <ol class="steps">
+      <li><h3>Create the script</h3>
+        <p>Signed into the organization's Google account, go to <code>script.new</code>.
+        Replace the default <code>Code.gs</code> with the project's <code>Code.gs</code>, then add the
+        five HTML files (＋ ▸ HTML): <code>Styles</code>, <code>CheckOut</code>, <code>CheckIn</code>,
+        <code>Board</code>, <code>QR</code> — names must match exactly.</p></li>
+      <li><h3>Run <code>setup()</code> once</h3>
+        <p>Select the <code>setup</code> function and press Run; authorize when asked. It builds and
+        styles the whole spreadsheet and prints its URL in the execution log.</p></li>
+      <li><h3>Deploy the web app</h3>
+        <p>Deploy ▸ New deployment ▸ Web app → <em>Execute as: Me</em> · <em>Who has access: Anyone
+        with the link</em>. Copy the web app URL.</p></li>
+      <li><h3>Print the posters</h3>
+        <p>Open <code>…/exec?page=qr</code>, hit Print, laminate the two posters, and mount them
+        where animals come and go.</p></li>
+      <li><h3>Two one-time settings</h3>
+        <p>In the spreadsheet: File ▸ Settings → set your time zone, and Calculation →
+        <em>"On change and every minute"</em> so the dashboard's elapsed column ticks. Set the same
+        time zone in the script's Project Settings.</p></li>
+      <li><h3>Load the real roster</h3>
+        <p>Replace the sample animals and people with yours, and open
+        <code>…/exec?page=board</code> on the wall iPad. You're live.</p></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Honest limits</h2>
+    <p>"Device memory" is per-browser storage: a personal phone will always be greeted correctly,
+    while a shared iPad shows the previous user's name with a one-tap <em>Not you?</em> switch.
+    That is the true ceiling of device recognition without individual Google logins — anything more
+    would mean making everyone sign in.</p>
+    <div class="callout">Re-running <code>setup()</code> later is safe: it rebuilds structure and
+    styling but never touches logged data. If someone forgets to check in, just type the real
+    Time&nbsp;In and duration into their row on the Log tab.</div>
+  </section>
+</main>

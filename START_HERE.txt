@@ -1,0 +1,50 @@
+WHO HAS THE KANGAROO? — the whole system, free
+Build It With AI · Episode 1
+
+WHAT THIS IS
+A QR-driven check-out / check-in system for anything your business signs out:
+animals, tools, loaner laptops, camera gear, vans, keys. It runs entirely inside
+one ordinary Google account — Google Sheets plus Apps Script. No server, no
+subscription, no seat licences, nothing to cancel.
+
+WHAT'S IN THE BOX
+  CLAUDE_PROMPT.txt     The four prompts used on camera, word for word.
+                        Start here if you want to build your own version.
+  apps-script/          The finished code. Six files.
+                          Code.gs        server logic + setup() that builds the
+                                         whole formatted spreadsheet for you
+                          Styles.html    shared design system
+                          CheckOut.html  the "taking it out" page (QR poster 1)
+                          CheckIn.html   the "bringing it back" page (QR poster 2)
+                          Board.html     the live wall dashboard
+                          QR.html        printable poster pair
+  setup-guide.html      Open in a browser. Illustrated setup.
+  README_project.md     Full technical notes, admin routes, everyday behaviour.
+
+SETUP — ABOUT TEN MINUTES
+1. Go to script.new while signed into the Google account that should own this.
+2. Recreate the six files from apps-script/. Code.gs replaces the default
+   Code.gs; add the five HTML files with + > HTML (names must match exactly,
+   without the .html).
+3. Select the setup function and Run it. Authorise when asked. The log prints
+   the URL of your new spreadsheet.
+4. Deploy > New deployment > Web app. Execute as: Me. Who has access: Anyone
+   with the link. Deploy, and copy the URL.
+5. Open <your url>?page=qr and print. Laminate the two posters. Mount them where
+   the things actually leave from — not in the office.
+6. In the spreadsheet: File > Settings > set your time zone, and Calculation >
+   "On change and every minute" so the dashboard's elapsed column ticks.
+7. Replace the sample roster with yours. Type new rows on the Animals,
+   Equipment and People tabs — they appear on the forms immediately.
+
+THE HONEST CORNER
+- It remembers the DEVICE, not the login. On a shared iPad it greets whoever
+  used it last; there is a one-tap "Not you?" switch. That is the real ceiling
+  of recognising someone without making everybody have an account — and
+  accounts would have killed adoption.
+- It does not do medical records, adoptions, or state reporting. If you need
+  those, buy real shelter software.
+- It is a spreadsheet. A hundred-odd items and nine people is comfortable. At
+  ten thousand assets, go buy software.
+
+Everything here is yours. Change it, sell services around it, whatever you like.

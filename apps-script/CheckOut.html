@@ -1,0 +1,335 @@
+<?!= include('Styles'); ?>
+
+<div class="band">
+  <div class="org"><?= orgName ?></div>
+  <h1>Heading out? 🐾</h1>
+  <div class="sub">Tap everything you're taking — animals and equipment</div>
+</div>
+
+<div class="wrap">
+  <div id="loading" style="padding:50px 0"><div class="spinner"></div></div>
+
+  <div id="form" class="hidden">
+    <div class="step">
+      <div class="step-label"><span class="num">1</span> Who's this?</div>
+      <div id="hello" class="hello hidden">
+        <span>Welcome back, <b id="helloName"></b> 👋</span>
+        <a onclick="forgetMe()">Not you?</a>
+      </div>
+      <div class="card"><div id="people" class="chips"></div></div>
+    </div>
+
+    <div class="step">
+      <div class="step-label"><span class="num">2</span> Which animals?</div>
+      <div class="hint">Tap as many as you're taking. Tap again to un-pick.</div>
+      <input id="animalSearch" class="animal-search" type="search"
+             placeholder="🔍 Type a name… or browse below" oninput="renderAnimals()">
+      <div id="animals"></div>
+      <div class="note" id="outNote"></div>
+    </div>
+
+    <div class="step">
+      <div class="step-label"><span class="num">3</span> Any equipment?</div>
+      <div class="hint">Audio, vehicles and gear — optional, pick as many as you need.</div>
+      <div id="gear"></div>
+      <div class="note" id="gearNote"></div>
+    </div>
+
+    <div class="step">
+      <div class="step-label"><span class="num">4</span> Ready?</div>
+      <div id="picked" class="picked"></div>
+      <button id="go" class="btn btn-primary" disabled onclick="submit()">Pick at least one thing</button>
+      <div id="err" class="error"></div>
+    </div>
+  </div>
+
+  <div id="done" class="success hidden">
+    <div class="big" id="doneEmoji">🐾</div>
+    <h2 id="doneTitle"></h2>
+    <p id="doneSub"></p>
+    <div id="doneList" class="picked center"></div>
+    <div class="pill" id="donePill"></div>
+    <p class="note" style="margin-top:26px">When you come back, scan the <b>“I'm Back”</b> poster to check everything in.</p>
+  </div>
+</div>
+
+<script>
+  // Multi-select: sel.animals / sel.gear are name → true maps.
+  var sel = { person: null, animals: {}, gear: {} };
+  var LS_KEY = 'eco_person';
+  var classes = [], flat = [], gearCats = [], openCls = {}, openGear = {}, emojis = {};
+
+  google.script.run.withSuccessHandler(render).withFailureHandler(fail).apiCheckoutData();
+
+  function render(data) {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('form').classList.remove('hidden');
+
+    // People chips — pre-select the remembered person from this device
+    var remembered = sel.person;
+    if (!remembered) { try { remembered = localStorage.getItem(LS_KEY); } catch (e) {} }
+    var pWrap = document.getElementById('people');
+    pWrap.innerHTML = '';
+    data.people.forEach(function (name) {
+      var b = mkChip(name, function () { pick(name, b, pWrap); });
+      pWrap.appendChild(b);
+      if (name === remembered) {
+        pick(name, b, pWrap);
+        var h = document.getElementById('hello');
+        h.classList.remove('hidden');
+        document.getElementById('helloName').textContent = name;
+      }
+    });
+
+    // Animals: searchable + grouped by class → species (already-out excluded server-side)
+    classes = data.classes || [];
+    emojis = data.emojis || {};   // name → emoji, custom ones from the roster tabs
+    flat = [];
+    classes.forEach(function (g) {
+      g.species.forEach(function (s) {
+        s.animals.forEach(function (n) {
+          flat.push({ name: n, species: s.species, emoji: (data.emojis && data.emojis[n]) || s.emoji, cls: g.cls });
+        });
+      });
+    });
+    // Drop selections that are no longer available (someone else took them)
+    Object.keys(sel.animals).forEach(function (n) {
+      if (!flat.some(function (a) { return a.name === n; })) delete sel.animals[n];
+    });
+    renderAnimals();
+    document.getElementById('outNote').textContent = data.outCount > 0
+      ? data.outCount + (data.outCount === 1 ? ' animal is' : ' animals are') + ' already out — hidden from this list.'
+      : '';
+
+    // Equipment: one collapsible section per category
+    gearCats = data.gear || [];
+    var avail = {};
+    gearCats.forEach(function (g) { g.items.forEach(function (n) { avail[n] = true; }); });
+    Object.keys(sel.gear).forEach(function (n) { if (!avail[n]) delete sel.gear[n]; });
+    renderGear();
+    document.getElementById('gearNote').textContent = data.gearOutCount > 0
+      ? data.gearOutCount + (data.gearOutCount === 1 ? ' item is' : ' items are') + ' already out — hidden from this list.'
+      : '';
+    updateGo();
+  }
+
+  function renderAnimals() {
+    var aWrap = document.getElementById('animals');
+    aWrap.innerHTML = '';
+    if (!flat.length) {
+      aWrap.innerHTML = '<div class="card"><p class="note" style="margin:0">Every animal is out right now — check back soon! 🏡</p></div>';
+      return;
+    }
+    var q = (document.getElementById('animalSearch').value || '').trim().toLowerCase();
+
+    if (q) {                       // search mode: flat matches, grouped by species
+      var hits = flat.filter(function (a) {
+        return (a.name + ' ' + a.species).toLowerCase().indexOf(q) >= 0;
+      });
+      var card = document.createElement('div');
+      card.className = 'card';
+      if (!hits.length) {
+        card.innerHTML = '<p class="note" style="margin:0">No animal matches “' + esc(q) + '” — try browsing below, or they may be out.</p>';
+      } else {
+        appendSpeciesGroups(card, hits);
+      }
+      aWrap.appendChild(card);
+      return;
+    }
+
+    // browse mode: one collapsible section per class; sections with picks stay open
+    flat.forEach(function (a) { if (sel.animals[a.name]) openCls[a.cls] = true; });
+    classes.forEach(function (g) {
+      var picked = flat.filter(function (a) { return a.cls === g.cls && sel.animals[a.name]; }).length;
+      var acc = mkAccordion(g.emoji, g.cls, g.total, picked, openCls[g.cls], function (open) { openCls[g.cls] = open; });
+      var members = flat.filter(function (a) { return a.cls === g.cls; });
+      appendSpeciesGroups(acc.body, members);
+      aWrap.appendChild(acc.el);
+    });
+  }
+
+  function renderGear() {
+    var gWrap = document.getElementById('gear');
+    gWrap.innerHTML = '';
+    if (!gearCats.length) {
+      gWrap.innerHTML = '<div class="card"><p class="note" style="margin:0">All equipment is out right now.</p></div>';
+      return;
+    }
+    gearCats.forEach(function (g) {
+      var picked = g.items.filter(function (n) { return sel.gear[n]; }).length;
+      if (picked) openGear[g.cat] = true;
+      var acc = mkAccordion(g.emoji, g.cat, g.items.length, picked, openGear[g.cat], function (open) { openGear[g.cat] = open; });
+      var chips = document.createElement('div');
+      chips.className = 'chips multi';
+      chips.style.paddingTop = '12px';
+      g.items.forEach(function (n) {
+        var b = mkChip((emojis[n] || g.emoji) + ' ' + n, function () { toggle(sel.gear, n, b); });
+        b.classList.add('gold');
+        if (sel.gear[n]) b.classList.add('on');
+        chips.appendChild(b);
+      });
+      acc.body.appendChild(chips);
+      gWrap.appendChild(acc.el);
+    });
+  }
+
+  function mkAccordion(emoji, title, total, picked, isOpen, onToggle) {
+    var acc = document.createElement('div');
+    acc.className = 'acc' + (isOpen ? ' open' : '');
+    var head = document.createElement('button');
+    head.type = 'button';
+    head.className = 'acc-head';
+    head.innerHTML = '<span>' + emoji + '</span><span>' + esc(title) + '</span>' +
+      (picked ? '<span class="count picked-count">' + picked + ' picked</span>' : '') +
+      '<span class="count' + (picked ? ' dim' : '') + '">' + total + '</span><span class="chev">▼</span>';
+    head.addEventListener('click', function () {
+      var open = !acc.classList.contains('open');
+      acc.classList.toggle('open', open);
+      onToggle(open);
+    });
+    acc.appendChild(head);
+    var body = document.createElement('div');
+    body.className = 'acc-body';
+    acc.appendChild(body);
+    return { el: acc, body: body };
+  }
+
+  function appendSpeciesGroups(container, list) {
+    var bySpecies = {}, order = [];
+    list.forEach(function (a) {
+      if (!bySpecies[a.species]) { bySpecies[a.species] = []; order.push(a.species); }
+      bySpecies[a.species].push(a);
+    });
+    order.forEach(function (sp) {
+      var t = document.createElement('div');
+      t.className = 'cat-title';
+      t.innerHTML = '<span>' + bySpecies[sp][0].emoji + ' ' + esc(plural(sp)) + '</span><span class="rule"></span>';
+      container.appendChild(t);
+      var chips = document.createElement('div');
+      chips.className = 'chips multi';
+      bySpecies[sp].forEach(function (a) {
+        var b = mkChip(a.emoji + ' ' + a.name, function () { toggle(sel.animals, a.name, b); });
+        b.classList.add('gold');
+        if (sel.animals[a.name]) b.classList.add('on');
+        chips.appendChild(b);
+      });
+      container.appendChild(chips);
+    });
+  }
+
+  function mkChip(label, onTap) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = label;
+    b.addEventListener('click', onTap);
+    return b;
+  }
+
+  function toggle(map, name, btn) {
+    if (map[name]) { delete map[name]; btn.classList.remove('on'); }
+    else { map[name] = true; btn.classList.add('on'); }
+    // refresh the "N picked" badges without collapsing anything
+    var q = document.getElementById('animalSearch').value;
+    if (map === sel.animals && !q) renderAnimals(); else if (map === sel.gear) renderGear();
+    updateGo();
+  }
+
+  function pick(name, btn, scope) {
+    sel.person = name;
+    scope.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('on'); });
+    btn.classList.add('on');
+    updateGo();
+  }
+
+  function pickedItems() {
+    var out = [];
+    flat.forEach(function (a) { if (sel.animals[a.name]) out.push({ name: a.name, emoji: a.emoji }); });
+    gearCats.forEach(function (g) {
+      g.items.forEach(function (n) { if (sel.gear[n]) out.push({ name: n, emoji: emojis[n] || g.emoji }); });
+    });
+    return out;
+  }
+
+  function updateGo() {
+    var items = pickedItems();
+    var nA = Object.keys(sel.animals).length, nG = Object.keys(sel.gear).length;
+    var wrap = document.getElementById('picked');
+    wrap.innerHTML = items.map(function (i) { return '<span>' + i.emoji + ' ' + esc(i.name) + '</span>'; }).join('');
+    var go = document.getElementById('go');
+    go.disabled = !(sel.person && items.length);
+    go.textContent = !items.length ? 'Pick at least one thing'
+      : !sel.person ? 'Tap your name first'
+      : 'Check out ' + summary(nA, nG) + ' →';
+  }
+
+  function summary(nA, nG) {
+    var parts = [];
+    if (nA) parts.push(nA + (nA === 1 ? ' animal' : ' animals'));
+    if (nG) parts.push(nG + (nG === 1 ? ' item' : ' items'));
+    return parts.join(' + ');
+  }
+
+  function forgetMe() {
+    try { localStorage.removeItem(LS_KEY); } catch (e) {}
+    sel.person = null;
+    document.getElementById('hello').classList.add('hidden');
+    document.querySelectorAll('#people .chip').forEach(function (c) { c.classList.remove('on'); });
+    updateGo();
+  }
+
+  function submit() {
+    var go = document.getElementById('go');
+    var label = go.textContent;
+    go.disabled = true; go.textContent = 'Checking out…';
+    document.getElementById('err').style.display = 'none';
+    var animals = Object.keys(sel.animals), gear = Object.keys(sel.gear);
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (!res.ok) {
+          var e = document.getElementById('err');
+          e.textContent = res.message; e.style.display = 'block';
+          go.disabled = false; go.textContent = label;
+          if (res.stale) {  // someone beat them to something — refresh the lists
+            (res.taken || []).forEach(function (n) { delete sel.animals[n]; delete sel.gear[n]; });
+            google.script.run.withSuccessHandler(render).apiCheckoutData();
+          }
+          return;
+        }
+        try { localStorage.setItem(LS_KEY, res.person); } catch (e) {}
+        var items = res.items || [{ name: res.animal, emoji: res.emoji }];
+        document.getElementById('form').classList.add('hidden');
+        document.getElementById('doneEmoji').textContent = items[0].emoji;
+        document.getElementById('doneTitle').textContent =
+          items.length === 1 ? items[0].name + ' is out with ' + res.person
+                             : items.length + ' things are out with ' + res.person;
+        document.getElementById('doneSub').textContent = 'Have a wonderful time!';
+        document.getElementById('doneList').innerHTML = items.length > 1
+          ? items.map(function (i) { return '<span>' + i.emoji + ' ' + esc(i.name) + '</span>'; }).join('') : '';
+        document.getElementById('donePill').textContent = 'Started at ' + res.time;
+        document.getElementById('done').classList.remove('hidden');
+        window.scrollTo(0, 0);
+      })
+      .withFailureHandler(function (err) {
+        fail(err);
+        go.disabled = false; go.textContent = label;
+      })
+      .apiSubmitCheckout(sel.person, animals, gear);
+  }
+
+  function fail(err) {
+    var e = document.getElementById('err');
+    if (e) { e.textContent = 'Something went wrong: ' + (err && err.message || err); e.style.display = 'block'; }
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('form').classList.remove('hidden');
+  }
+
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  function plural(c) {
+    if (c === 'Other') return 'Other friends';
+    var last = c.slice(-1);
+    if (last === 's') return c;                       // Hissing Cockroaches
+    if (last === 'x') return c + 'es';                // Egyptian Uromastyxes
+    if (last === 'y') return c.slice(0, -1) + 'ies';  // Cavy → Cavies
+    return c + 's';
+  }
+</script>

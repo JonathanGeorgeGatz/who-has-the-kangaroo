@@ -1,0 +1,313 @@
+<?!= include('Styles'); ?>
+
+<div class="band">
+  <div class="org"><?= orgName ?></div>
+  <h1>Welcome back! 🏡</h1>
+  <div class="sub">Let's tuck everyone in and put the gear away</div>
+</div>
+
+<div class="wrap">
+  <div id="loading" style="padding:50px 0"><div class="spinner"></div></div>
+
+  <!-- Step 1: who -->
+  <div id="whoStep" class="step hidden">
+    <div class="step-label"><span class="num">1</span> Who's this?</div>
+    <div id="hello" class="hello hidden">
+      <span>Welcome back, <b id="helloName"></b> 👋</span>
+      <a onclick="forgetMe()">Not you?</a>
+    </div>
+    <div class="card"><div id="people" class="chips"></div></div>
+  </div>
+
+  <!-- Step 2: what's coming back (everything of theirs is pre-selected) -->
+  <div id="outingStep" class="step hidden">
+    <div class="step-label"><span class="num">2</span> <span id="outingLabel">What are you bringing back?</span></div>
+    <div class="hint" id="outingHint"></div>
+    <div class="card"><div id="outings" class="chips multi"></div></div>
+  </div>
+
+  <div id="noOuting" class="success hidden">
+    <div class="big">🤔</div>
+    <h2>Nothing is out right now</h2>
+    <p>Every animal is home and all the equipment is put away.<br>
+       Maybe someone already checked yours in?</p>
+  </div>
+
+  <!-- Step 3: report card -->
+  <div id="reportStep" class="hidden">
+    <div class="step" id="actsStep">
+      <div class="step-label"><span class="num">3</span> <span id="actsLabel">How did it go?</span></div>
+      <div class="card"><div id="acts" class="chips"></div></div>
+    </div>
+
+    <div class="step hidden" id="matesStep">
+      <div class="step-label">🐾 Who did they hang out with?</div>
+      <div class="card">
+        <div class="note" style="margin:0 0 10px;text-align:left">Only animals that were out at the same time are listed.</div>
+        <div id="mates" class="chips"></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-label">📝 Anything to share?</div>
+      <textarea id="comments" placeholder="How was it? Anything the next person should know?"></textarea>
+    </div>
+
+    <div class="step">
+      <button id="finish" class="btn btn-gold" onclick="submit()">Finished — tuck them in 🌙</button>
+      <div id="err" class="error"></div>
+    </div>
+  </div>
+
+  <div id="done" class="success hidden">
+    <div class="big" id="doneEmoji">🐾</div>
+    <h2 id="doneTitle"></h2>
+    <p id="doneSub">Thanks for the wonderful outing.</p>
+    <div id="doneList" class="picked center"></div>
+    <div class="pill" id="donePill"></div>
+  </div>
+</div>
+
+<script>
+  var LS_KEY = 'eco_person';
+  // state.selected: log id → outing card (multi-select)
+  var state = { person: null, selected: {}, all: [], acts: [], mates: [], activities: [] };
+
+  var remembered = null;
+  try { remembered = localStorage.getItem(LS_KEY); } catch (e) {}
+  google.script.run.withSuccessHandler(render).withFailureHandler(fail).apiCheckinData(remembered);
+
+  function render(data) {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('whoStep').classList.remove('hidden');
+    state.activities = data.activities;
+
+    var pWrap = document.getElementById('people');
+    pWrap.innerHTML = '';
+    data.people.forEach(function (name) {
+      var b = mkChip(name, function () { choosePerson(name, b, pWrap); });
+      pWrap.appendChild(b);
+      if (name === remembered) {
+        b.classList.add('on');
+        state.person = name;
+        var h = document.getElementById('hello');
+        h.classList.remove('hidden');
+        document.getElementById('helloName').textContent = name;
+      }
+    });
+
+    if (remembered && state.person) renderOutings(data);
+  }
+
+  function choosePerson(name, btn, scope) {
+    state.person = name;
+    try { localStorage.setItem(LS_KEY, name); } catch (e) {}
+    scope.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('on'); });
+    btn.classList.add('on');
+    resetLower();
+    document.getElementById('loading').classList.remove('hidden');
+    google.script.run.withSuccessHandler(function (data) {
+      document.getElementById('loading').classList.add('hidden');
+      renderOutings(data);
+    }).withFailureHandler(fail).apiCheckinData(name);
+  }
+
+  function renderOutings(data) {
+    resetLower();
+    var open = data.open, others = data.others || [];
+    state.all = open.concat(others);
+    if (!open.length && !others.length) {
+      document.getElementById('noOuting').classList.remove('hidden');
+      return;
+    }
+    var step = document.getElementById('outingStep');
+    step.classList.remove('hidden');
+    document.getElementById('outingLabel').textContent =
+      open.length === 0 ? "Bringing back someone else's?" : 'What are you bringing back?';
+    document.getElementById('outingHint').textContent =
+      open.length > 1 ? 'Everything you have out is selected — tap anything you’re keeping to un-pick it.'
+      : open.length === 1 ? 'Tap to un-pick, or add anything else you’re bringing back.'
+      : 'Tap everything you’re bringing back.';
+    var wrap = document.getElementById('outings');
+    wrap.innerHTML = '';
+    open.forEach(function (o) {
+      var b = mkChip(o.emoji + ' ' + o.animal + ' · out ' + fmtMin(o.minutes), function () { toggleOuting(o, b); });
+      wrap.appendChild(b);
+      state.selected[o.id] = o;          // pre-select their own
+      b.classList.add('on');
+    });
+    // Items checked out by a colleague — anyone may bring them home;
+    // the log records both the handler and who returned them.
+    if (others.length) {
+      if (open.length) {
+        var t = document.createElement('div');
+        t.className = 'cat-title';
+        t.style.width = '100%';
+        t.innerHTML = '<span>Out with someone else</span><span class="rule"></span>';
+        t.style.marginTop = '14px';
+        wrap.appendChild(t);
+      }
+      others.forEach(function (o) {
+        var b = mkChip(o.emoji + ' ' + o.animal + ' · with ' + o.handler + ' · out ' + fmtMin(o.minutes), function () { toggleOuting(o, b); });
+        wrap.appendChild(b);
+      });
+    }
+    renderReport();
+  }
+
+  function toggleOuting(o, btn) {
+    if (state.selected[o.id]) { delete state.selected[o.id]; btn.classList.remove('on'); }
+    else { state.selected[o.id] = o; btn.classList.add('on'); }
+    renderReport();
+  }
+
+  function selectedList() { return Object.keys(state.selected).map(function (id) { return state.selected[id]; }); }
+  function selectedAnimals() { return selectedList().filter(function (o) { return o.kind !== 'Equipment'; }); }
+
+  function renderReport() {
+    var picked = selectedList();
+    var report = document.getElementById('reportStep');
+    if (!picked.length) { report.classList.add('hidden'); return; }
+    report.classList.remove('hidden');
+
+    var animals = selectedAnimals();
+    var gearOnly = animals.length === 0;
+    document.getElementById('actsStep').classList.toggle('hidden', gearOnly);
+    document.getElementById('actsLabel').textContent =
+      animals.length > 1 ? 'How did it go? (applies to all ' + animals.length + ' animals)' : 'How did it go?';
+
+    // Activity chips — keep whatever was already ticked
+    var aWrap = document.getElementById('acts');
+    aWrap.innerHTML = '';
+    state.activities.forEach(function (a) {
+      var b = mkChip(a.label, function () { toggle(state.acts, a.label, b); syncMates(); });
+      b.dataset.key = a.key;
+      if (state.acts.indexOf(a.label) >= 0) b.classList.add('on');
+      aWrap.appendChild(b);
+    });
+
+    // Playmates: union across the selected animals, minus the animals themselves
+    var mine = {};
+    animals.forEach(function (o) { mine[o.animal] = true; });
+    var mates = {}, order = [];
+    animals.forEach(function (o) {
+      (o.playmates || []).forEach(function (m) {
+        var plain = m.replace(/^\S+\s+/, '');       // strip the emoji prefix
+        if (mine[plain] || mates[m]) return;
+        mates[m] = true; order.push(m);
+      });
+    });
+    state.mates = state.mates.filter(function (m) { return mates[m]; });
+    var mWrap = document.getElementById('mates');
+    mWrap.innerHTML = '';
+    order.forEach(function (name) {
+      var b = mkChip(name, function () { toggle(state.mates, name, b); });
+      b.classList.add('gold');
+      if (state.mates.indexOf(name) >= 0) b.classList.add('on');
+      mWrap.appendChild(b);
+    });
+    state.playmateCount = order.length;
+    syncMates();
+
+    document.getElementById('finish').textContent = finishLabel();
+  }
+
+  function syncMates() {
+    var social = state.acts.some(function (l) {
+      return state.activities.some(function (a) { return a.label === l && a.key === 'social'; });
+    });
+    var show = social && selectedAnimals().length > 0 && state.playmateCount > 0;
+    document.getElementById('matesStep').classList.toggle('hidden', !show);
+  }
+
+  function finishLabel() {
+    var nA = selectedAnimals().length, nG = selectedList().length - nA;
+    if (!nA) return 'Put away ' + nG + (nG === 1 ? ' item' : ' items') + ' 🧰';
+    var s = 'Finished — tuck ' + (nA === 1 ? 'them' : nA === 2 ? 'both' : 'all ' + nA) + ' in 🌙';
+    return nG ? s + ' + ' + nG + ' item' + (nG === 1 ? '' : 's') : s;
+  }
+
+  function submit() {
+    var go = document.getElementById('finish');
+    var label = go.textContent;
+    go.disabled = true; go.textContent = 'Saving…';
+    document.getElementById('err').style.display = 'none';
+    var ids = Object.keys(state.selected);
+    google.script.run
+      .withSuccessHandler(function (res) {
+        if (!res.ok) {
+          var e = document.getElementById('err');
+          e.textContent = res.message; e.style.display = 'block';
+          go.disabled = false; go.textContent = label;
+          return;
+        }
+        ['whoStep', 'outingStep', 'reportStep'].forEach(function (id) {
+          document.getElementById(id).classList.add('hidden');
+        });
+        var items = res.items || [{ name: res.animal, emoji: res.emoji, minutes: res.minutes, kind: 'Animal' }];
+        var nA = items.filter(function (i) { return i.kind !== 'Equipment'; }).length;
+        document.getElementById('doneEmoji').textContent = items[0].emoji;
+        document.getElementById('doneTitle').textContent =
+          items.length === 1 ? items[0].name + (nA ? ' is home safe' : ' is put away')
+                             : 'All ' + items.length + ' checked in';
+        document.getElementById('doneSub').textContent = nA ? 'Thanks for the wonderful outing.' : 'Thanks for putting it back.';
+        document.getElementById('doneList').innerHTML = items.length > 1
+          ? items.map(function (i) { return '<span>' + i.emoji + ' ' + esc(i.name) + '</span>'; }).join('') : '';
+        var longest = items.reduce(function (m, i) { return Math.max(m, i.minutes || 0); }, 0);
+        document.getElementById('donePill').textContent = 'Out for ' + fmtMin(longest);
+        document.getElementById('done').classList.remove('hidden');
+        window.scrollTo(0, 0);
+      })
+      .withFailureHandler(function (err) {
+        fail(err);
+        go.disabled = false; go.textContent = label;
+      })
+      .apiSubmitCheckin(ids, {
+        activities: state.acts,
+        playmates: state.mates,
+        comments: document.getElementById('comments').value,
+      }, state.person);
+  }
+
+  function resetLower() {
+    ['outingStep', 'reportStep', 'noOuting', 'done'].forEach(function (id) {
+      document.getElementById(id).classList.add('hidden');
+    });
+    state.selected = {}; state.acts = []; state.mates = [];
+  }
+
+  function forgetMe() {
+    try { localStorage.removeItem(LS_KEY); } catch (e) {}
+    remembered = null; state.person = null;
+    document.getElementById('hello').classList.add('hidden');
+    document.querySelectorAll('#people .chip').forEach(function (c) { c.classList.remove('on'); });
+    resetLower();
+  }
+
+  function toggle(list, value, btn) {
+    var i = list.indexOf(value);
+    if (i >= 0) { list.splice(i, 1); btn.classList.remove('on'); }
+    else { list.push(value); btn.classList.add('on'); }
+  }
+
+  function mkChip(label, onTap) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.textContent = label;
+    b.addEventListener('click', onTap);
+    return b;
+  }
+
+  function fmtMin(m) {
+    if (m < 60) return m + ' min';
+    var h = Math.floor(m / 60);
+    return h + 'h ' + (m % 60) + 'm';
+  }
+
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  function fail(err) {
+    document.getElementById('loading').classList.add('hidden');
+    var e = document.getElementById('err');
+    if (e) { e.textContent = 'Something went wrong: ' + (err && err.message || err); e.style.display = 'block'; }
+  }
+</script>
