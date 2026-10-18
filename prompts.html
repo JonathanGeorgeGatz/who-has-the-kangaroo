@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Prompts — Who Has The Kangaroo? (Build It With AI, Ep 1)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#f6f7f1;--card:#fff;--ink:#22301f;--muted:#5f6b58;--line:#d9e0d2;--deep:#233d2b;--forest:#2e5339;--gold:#c9a24b;--gold-ink:#7a5d1d;--code:#edf0e7}
+@media (prefers-color-scheme:dark){:root{--paper:#121812;--card:#1b231b;--ink:#e8eee2;--muted:#a3b09a;--line:#2c3a2c;--deep:#0d150e;--forest:#3f7350;--gold:#d7b25c;--gold-ink:#e3c37a;--code:#202a20}}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+a{color:var(--forest)}@media (prefers-color-scheme:dark){a{color:#9fd8b0}}
+.band{background:var(--deep);color:#fbf9f4;padding:44px 20px 40px}.band .in{max-width:960px;margin:0 auto}
+.eyebrow{font:600 13px Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+h1{font-family:Fraunces,Georgia,serif;font-weight:650;font-size:clamp(34px,6vw,56px);line-height:1.08;margin:10px 0 12px}
+.lede{font-size:19px;color:#cfdac9;max-width:680px;margin:0}
+main{max-width:960px;margin:0 auto;padding:34px 20px 60px}
+h2{font-family:Fraunces,Georgia,serif;font-weight:650;font-size:28px;margin:40px 0 8px}
+.muted{color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:18px 0}
+.tile{display:block;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;text-decoration:none;color:var(--ink);transition:transform .15s,border-color .15s}
+.tile:hover{transform:translateY(-2px);border-color:var(--gold)}
+.tile .big{font-size:34px}.tile b{display:block;font-size:19px;margin:6px 0 4px}.tile span{color:var(--muted);font-size:15px}
+.tip{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:16px 20px;margin:18px 0}
+.btn{display:inline-block;background:var(--forest);color:#fff!important;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:12px;margin:6px 8px 6px 0}
+.btn.alt{background:transparent;color:var(--forest)!important;border:1.5px solid var(--forest)}
+@media (prefers-color-scheme:dark){.btn.alt{color:#9fd8b0!important;border-color:#9fd8b0}}
+.prompt{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:16px 0;overflow:hidden}
+.prompt .head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.prompt .head b{font-size:16px}.prompt pre{margin:0;padding:16px;background:var(--code);white-space:pre-wrap;word-wrap:break-word;font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.copy{background:var(--forest);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:600 14px Inter,sans-serif;cursor:pointer;flex:0 0 auto}
+footer{max-width:960px;margin:0 auto;padding:0 20px 40px;color:var(--muted);font-size:14px}
+</style></head><body>
+<div class="band"><div class="in">
+<div class="eyebrow">Build It With AI · Episode 1</div>
+<h1>The prompts, word for word</h1>
+<p class="lede">The exact prompts from the video, in order. Press Copy, paste into Claude or any capable AI, and change the nouns to whatever your business signs in and out.</p>
+</div></div>
+<main>
+<p><a href="index.html">← Back to the demo and downloads</a></p>
+<div class="prompt"><div class="head"><b>Prompt 1 — The spec</b><button class="copy" data-k="1" type="button">Copy</button></div><pre id="p1">GOAL
+One screen that always knows which animals and which equipment are signed out,
+with whom, and for how long.
+
+DATA
+Animals (name, species, class)
+Equipment (item, category)
+People (staff roster)
+One log row per item per outing.
+
+RULES
+1. Two people can never take the same animal.
+2. The form shows only what is actually available.
+3. Anyone can return a colleague&#x27;s animal.
+
+Build this on Google Sheets with Apps Script. No external services, no database,
+no paid APIs — it has to run inside one ordinary Google account. Give me a
+setup() function that creates the whole spreadsheet structure, formatted, with
+sample data I can delete.</pre></div><p class="muted" style="margin-top:-6px">Never ask AI to &quot;build software.&quot; Give it a spec: Goal, Data, Rules. The Rules section is the part that saves you later. Swap the nouns for yours.</p>
+<div class="prompt"><div class="head"><b>Prompt 2 — The form that thinks</b><button class="copy" data-k="2" type="button">Copy</button></div><pre id="p2">Build the check-out page as a web app, not a Google Form.
+
+IT MUST:
+- rebuild the item list on every scan from the log — anything already out must
+  not appear at all
+- remember the person on that device and pre-select their name next time
+  (localStorage is fine; add a &quot;Not you?&quot; switch)
+- let one submission carry several animals and several pieces of equipment at
+  once, each getting its own log row so they can come back separately
+- take four seconds to use, not forty — this is being used by volunteers
+  holding a live animal, one-handed, outdoors
+
+Serve it from the same Apps Script project. It opens from a QR code.</pre></div><p class="muted" style="margin-top:-6px">This is what makes it a web app instead of a Google Form. A form shows everybody the same list forever.</p>
+<div class="prompt"><div class="head"><b>Prompt 3 — The follow-up that fixed the bug</b><button class="copy" data-k="3" type="button">Copy</button></div><pre id="p3">Two people can scan at the same second and both get the stale list. Add a lock:
+
+- take a script lock before writing anything
+- re-read what is actually out, inside the lock
+- if any requested animal is now taken, write nothing and return which ones
+  went, with a message telling the user the list refreshed
+- always release the lock in a finally block
+
+Then prove it: write a test that fires two submissions for the same animal in
+the same second, and show me that exactly one succeeds.</pre></div><p class="muted" style="margin-top:-6px">The first version worked, and it let two people check out the same animal in the same second. This is the prompt that added the lock.</p>
+<div class="prompt"><div class="head"><b>Prompt 4 — The wall board</b><button class="copy" data-k="4" type="button">Copy</button></div><pre id="p4">Add a wall dashboard page to the same web app, for an old iPad mounted by the
+door.
+
+- shows everything currently out: item, category, who has it, how long
+- elapsed time ticks every second and the page refreshes itself
+- colour by age: green under 6 hours, amber from 6, red from 8
+- big enough to read from across a room; no interaction required
+
+Nobody should have to interpret it. If there is red on the board, something is
+still out that shouldn&#x27;t be.</pre></div><p class="muted" style="margin-top:-6px">The screen by the door. Nobody should have to interpret it.</p>
+<h2>How to check what you get back</h2>
+<p>Don't trust it because it ran. Try to break it:</p>
+<ol><li>Submit the same item twice, at the same moment, from two browsers.</li><li>Add a row with a missing field and submit.</li><li>Return an item that somebody else checked out.</li><li>Check something out, check it in a minute later, and confirm the duration and status both land correctly.</li><li>Paste in a hundred rows and make sure the dashboard still adds up.</li></ol>
+<p>If any of those does something surprising, that's your next prompt.</p>
+<h2>What this replaces</h2>
+<p class="muted">Prices checked October 2026 on the vendors' own pages.</p>
+<ul><li>Cheqroom: $184 per administrator per month, billed annually ($2,208 a year)</li><li>Asset Panda: no public price; you book a call and they quote you</li><li>EZOfficeInventory: from about $81 a month</li></ul>
+<p>If you run an actual animal shelter and need medical records, adoptions and state reporting, buy the real thing. Shelterluv charges $2 per completed adoption, and that's a fair deal.</p>
+</main>
+<footer>From <b>Build It With AI</b>, Episode 1.</footer>
+<script>
+document.querySelectorAll('.copy').forEach(function(b){b.addEventListener('click',function(){
+ var t=document.getElementById('p'+b.dataset.k).textContent;
+ var done=function(){b.textContent='Copied ✓';setTimeout(function(){b.textContent='Copy'},1600)};
+ if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){fallback(t);done()})}else{fallback(t);done()}
+});});
+function fallback(t){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove()}
+</script>
+</body></html>

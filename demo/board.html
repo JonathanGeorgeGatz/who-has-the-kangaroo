@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wall board · Who Has The Kangaroo? demo</title>
+<script src="backend.js"></script>
+</head><body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --deep: #1c2f22; --deep2: #233d2b; --forest: #2e5339;
+    --gold: #c9a24b; --cream: #fbf9f4; --sage: #cfdac9;
+    --amber: #e0a84f; --red: #e07a5f; --ok: #8fbf9f;
+    --card: rgba(255,255,255,.08); --line: rgba(255,255,255,.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    background: radial-gradient(120% 120% at 50% 0%, var(--deep2) 0%, var(--deep) 70%);
+    color: var(--cream); font-family: 'Inter', system-ui, sans-serif;
+    padding: 24px 30px 60px; min-height: 100vh;
+  }
+  header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+  .title { font-family: 'Fraunces', Georgia, serif; font-size: 30px; font-weight: 650; }
+  .title .paw { color: var(--gold); }
+  .when { text-align: right; color: var(--sage); font-size: 14px; }
+  .when .clock { font-size: 24px; font-weight: 700; color: var(--cream); font-variant-numeric: tabular-nums; }
+
+  .nav { display: flex; gap: 10px; margin: 22px 0 4px; flex-wrap: wrap; }
+  .nav button {
+    background: var(--card); border: 1px solid var(--line); color: var(--sage);
+    border-radius: 999px; padding: 11px 22px; font-family: 'Inter', sans-serif;
+    font-size: 15px; font-weight: 600; cursor: pointer; min-height: 44px;
+  }
+  .nav button.on { background: var(--gold); border-color: var(--gold); color: var(--deep); }
+  .nav a.daily {
+    margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+    background: transparent; border: 1.5px solid var(--gold); color: var(--gold);
+    border-radius: 999px; padding: 11px 22px; font-size: 15px; font-weight: 700;
+    text-decoration: none; min-height: 44px;
+  }
+  .nav a.daily:active { background: var(--gold); color: var(--deep); }
+
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 18px 0; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; }
+  .stat .k { font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--sage); }
+  .stat .v { font-family: 'Fraunces', Georgia, serif; font-size: 30px; font-weight: 650; color: var(--gold); margin-top: 2px; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin: -6px 0 14px; font-size: 12px; color: var(--sage); }
+  .legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+  .legend .g::before { background: var(--ok); } .legend .a::before { background: var(--amber); } .legend .r::before { background: var(--red); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .tile {
+    background: var(--card); border-radius: 16px; padding: 16px 18px;
+    border-left: 6px solid var(--ok); border-top: 1px solid var(--line);
+    display: flex; align-items: center; gap: 14px; cursor: pointer;
+    transition: transform .1s ease; animation: pop .25s ease;
+  }
+  .tile:active { transform: scale(.98); }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px); } }
+  .tile.warn { border-left-color: var(--amber); }
+  .tile.late { border-left-color: var(--red); }
+  .tile.home { border-left-color: rgba(255,255,255,.18); }
+  .tile .emoji { font-size: 38px; line-height: 1; }
+  .tile .who { flex: 1; min-width: 0; }
+  .tile .name { font-family: 'Fraunces', Georgia, serif; font-size: 20px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile .sub { color: var(--sage); font-size: 13px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile .end { text-align: right; flex: none; }
+  .tile .big { font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .tile.warn .big { color: var(--amber); }
+  .tile.late .big { color: var(--red); }
+  .tile .tiny { color: var(--sage); font-size: 11.5px; margin-top: 2px; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+  .dot.out { background: var(--amber); }
+  .dot.homed { background: var(--ok); }
+
+  .species { margin: 26px 0 10px; display: flex; align-items: center; gap: 10px;
+    font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--sage); }
+  .species .rule { flex: 1; height: 1px; background: var(--line); }
+
+  .search {
+    width: 100%; max-width: 440px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; color: var(--cream); font-family: 'Inter', sans-serif;
+    font-size: 16px; padding: 13px 16px; margin: 14px 0;
+  }
+  .search::placeholder { color: rgba(207,218,201,.6); }
+  .search:focus { outline: none; border-color: var(--gold); }
+
+  .rows { display: flex; flex-direction: column; gap: 8px; }
+  .row {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 16px; cursor: pointer;
+  }
+  .row .top { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .row .a { font-weight: 700; font-size: 16px; }
+  .row .p { color: var(--sage); font-size: 14px; }
+  .row .d { margin-left: auto; font-variant-numeric: tabular-nums; font-size: 14px; color: var(--sage); }
+  .row .live { color: var(--amber); font-weight: 700; }
+  .row .more { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line);
+    font-size: 13.5px; color: var(--sage); line-height: 1.6; }
+  .row.openrow .more { display: block; }
+  .more b { color: var(--cream); font-weight: 600; }
+
+  .empty { text-align: center; padding: 70px 20px; }
+  .empty .big { font-size: 72px; }
+  .empty h2 { font-family: 'Fraunces', Georgia, serif; font-size: 28px; margin-top: 14px; }
+  .empty p { color: var(--sage); margin-top: 6px; }
+
+  /* Detail modal */
+  #backdrop { display: none; position: fixed; inset: 0; background: rgba(10,18,12,.7); z-index: 9; }
+  #modal {
+    display: none; position: fixed; z-index: 10; inset: auto 0 0 0; max-height: 86vh;
+    background: var(--deep2); border-top: 3px solid var(--gold);
+    border-radius: 22px 22px 0 0; padding: 24px 26px 40px; overflow-y: auto;
+  }
+  @media (min-width: 760px) {
+    #modal { inset: 6vh 0 auto 0; margin: 0 auto; width: min(680px, 92vw); border-radius: 22px; border: 1px solid var(--line); border-top: 3px solid var(--gold); }
+  }
+  body.modal-open #backdrop, body.modal-open #modal { display: block; }
+  .m-head { display: flex; align-items: center; gap: 14px; }
+  .m-head .emoji { font-size: 46px; }
+  .m-head h2 { font-family: 'Fraunces', Georgia, serif; font-size: 27px; font-weight: 650; }
+  .m-head .sub { color: var(--sage); font-size: 14px; margin-top: 2px; }
+  .m-close { margin-left: auto; background: var(--card); border: 1px solid var(--line); color: var(--cream);
+    border-radius: 50%; width: 40px; height: 40px; font-size: 18px; cursor: pointer; flex: none; }
+  .chipstats { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0 6px; }
+  .chipstat { background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+    padding: 8px 16px; font-size: 13.5px; color: var(--sage); }
+  .chipstat b { color: var(--gold); font-size: 15px; }
+  .m-label { margin: 18px 0 10px; font-size: 11.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--sage); font-weight: 700; }
+  .archive-link {
+    display: block; margin-top: 18px; text-align: center;
+    background: var(--card); border: 1px solid var(--gold); border-radius: 12px;
+    padding: 13px 16px; color: var(--gold); font-weight: 700; font-size: 14.5px;
+    text-decoration: none;
+  }
+  .archive-link:active { transform: scale(.98); }
+
+  footer { margin-top: 30px; text-align: center; color: rgba(255,255,255,.35); font-size: 12px; letter-spacing: .08em; }
+  @media (max-width: 700px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .nav a.daily { margin-left: 0; width: 100%; justify-content: center; }
+    body { padding: 16px 16px 50px; }
+    .title { font-size: 24px; }
+  }
+</style>
+
+<header>
+  <div class="title"><span class="paw">🐾</span> Sample Sanctuary — Dashboard</div>
+  <div class="when">
+    <div class="clock" id="clock">--:--</div>
+    <div id="dateLabel"></div>
+  </div>
+</header>
+
+<div class="nav">
+  <button id="nav-live" class="on" onclick="setView('live')">📺 Live</button>
+  <button id="nav-animals" onclick="setView('animals')">🐾 Animals</button>
+  <button id="nav-staff" onclick="setView('staff')">👤 Staff</button>
+  <button id="nav-gear" onclick="setView('gear')">🧰 Equipment</button>
+  <button id="nav-history" onclick="setView('history')">📜 History</button>
+  <a class="daily" href="#" target="_blank" rel="noopener">📋 Daily Animals List</a>
+</div>
+
+<div class="stats" id="stats"></div>
+<div class="legend" id="legend"></div>
+<div id="content"><div class="empty"><div class="big">🐾</div><h2>Loading…</h2></div></div>
+<footer>LIVE · refreshes automatically · tap anything for details</footer>
+
+<div id="backdrop" onclick="closeModal()"></div>
+<div id="modal"></div>
+
+<script>
+  var D = null, view = 'live', skew = 0, query = '';
+
+  function refresh() {
+    google.script.run.withSuccessHandler(function (d) {
+      skew = d.now - Date.now();
+      D = d;
+      render();
+    }).apiDashData();
+  }
+  function nowMs() { return Date.now() + skew; }
+
+  // ── helpers ──────────────────────────────────────────────
+  function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function fmtClock(ms) {
+    var d = new Date(ms);
+    return ((d.getHours() % 12) || 12) + ':' + pad(d.getMinutes()) + (d.getHours() < 12 ? ' AM' : ' PM');
+  }
+  function fmtDay(ms) {
+    var d = new Date(ms), MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return MON[d.getMonth()] + ' ' + d.getDate();
+  }
+  function fmtWhen(ms) { return fmtDay(ms) + ', ' + fmtClock(ms); }
+  function fmtMin(m) {
+    if (m == null) return '—';
+    if (m < 60) return m + 'm';
+    return Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+  }
+  function liveElapsed(outMs) {
+    var s = Math.max(0, Math.floor((nowMs() - outMs) / 1000));
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+    return h > 0 ? h + ':' + pad(m) + ':' + pad(s % 60) : m + ':' + pad(s % 60);
+  }
+  // Green until warnMs (6 h), amber until lateMs (8 h), red after — set server-side.
+  function ageClass(outMs) {
+    var ms = nowMs() - outMs;
+    var warn = D && D.warnMs || 6 * 3600e3, late = D && D.lateMs || 8 * 3600e3;
+    return ms >= late ? 'late' : ms >= warn ? 'warn' : '';
+  }
+  function hrs(ms) { var h = ms / 3600e3; return (h % 1 ? h.toFixed(1) : h) + ' h'; }
+  function isGear(r) { return r.kind === 'Equipment'; }
+  function dayStart() { var d = new Date(nowMs()); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
+  function monthStart() { var d = new Date(nowMs()); return new Date(d.getFullYear(), d.getMonth(), 1).getTime(); }
+  function openRows() { return D.log.filter(function (r) { return !r.inn; }); }
+  function durMin(r) { return r.inn ? (r.minutes != null ? r.minutes : Math.round((r.inn - r.out) / 60000)) : null; }
+
+  // ── navigation ───────────────────────────────────────────
+  function setView(v) {
+    view = v;
+    ['live', 'animals', 'staff', 'gear', 'history'].forEach(function (k) {
+      document.getElementById('nav-' + k).classList.toggle('on', k === v);
+    });
+    render();
+  }
+
+  // ── stats strip (always visible) ─────────────────────────
+  function renderStats() {
+    var t0 = dayStart(), m0 = monthStart();
+    var animalLog = D.log.filter(function (r) { return !isGear(r); });
+    var today = animalLog.filter(function (r) { return r.out >= t0; });
+    var back = today.filter(function (r) { return r.inn; });
+    var month = animalLog.filter(function (r) { return r.out >= m0; });
+    var done = back.map(durMin).filter(function (m) { return m != null; });
+    var avg = done.length ? Math.round(done.reduce(function (a, b) { return a + b; }, 0) / done.length) : 0;
+    var open = openRows();
+    document.getElementById('stats').innerHTML =
+      stat('Animals out', open.filter(function (r) { return !isGear(r); }).length) +
+      stat('Equipment out', open.filter(isGear).length) +
+      stat('Outings today', today.length) +
+      stat('This month', month.length) +
+      stat('Avg today', avg ? avg + 'm' : '—');
+    document.getElementById('legend').innerHTML =
+      '<span class="g">under ' + hrs(D.warnMs || 6 * 3600e3) + '</span>' +
+      '<span class="a">' + hrs(D.warnMs || 6 * 3600e3) + ' and over</span>' +
+      '<span class="r">' + hrs(D.lateMs || 8 * 3600e3) + ' and over</span>';
+  }
+  function stat(k, v) { return '<div class="stat"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>'; }
+
+  // ── views ────────────────────────────────────────────────
+  function render() {
+    if (!D) return;
+    document.getElementById('dateLabel').textContent = D.dateLabel;
+    renderStats();
+    var c = document.getElementById('content');
+    if (view === 'live') c.innerHTML = viewLive();
+    else if (view === 'animals') c.innerHTML = viewAnimals();
+    else if (view === 'staff') c.innerHTML = viewStaff();
+    else if (view === 'gear') c.innerHTML = viewGear();
+    else c.innerHTML = viewHistory();
+    tick();
+  }
+
+  function viewLive() {
+    var out = openRows().slice().sort(function (a, b) { return a.out - b.out; });
+    if (!out.length) {
+      return '<div class="empty"><div class="big">🏡</div><h2>Everyone is home</h2>' +
+             '<p>All animals are resting in their enclosures and the equipment is put away.</p></div>';
+    }
+    return '<div class="grid">' + out.map(function (r) {
+      return '<div class="tile ' + ageClass(r.out) + '" onclick="openItem(\'' + jsq(r.animal) + '\')">' +
+        '<div class="emoji">' + r.emoji + '</div>' +
+        '<div class="who"><div class="name">' + esc(r.animal) + '</div>' +
+        '<div class="sub">with ' + esc(r.person) + '</div></div>' +
+        '<div class="end"><div class="big elapsed" data-ms="' + r.out + '">0:00</div>' +
+        '<div class="tiny">since ' + fmtClock(r.out) + '</div></div></div>';
+    }).join('') + '</div>';
+  }
+
+  function viewAnimals() {
+    var openBy = {};
+    openRows().forEach(function (r) { openBy[r.animal] = r; });
+    var groups = {}, order = [];
+    D.animals.forEach(function (a) {
+      if (!groups[a.category]) { groups[a.category] = []; order.push(a.category); }
+      groups[a.category].push(a);
+    });
+    return order.map(function (cat) {
+      var em = groups[cat][0].emoji;
+      return '<div class="species"><span>' + em + ' ' + esc(cat) + '</span><span class="rule"></span></div>' +
+        '<div class="grid">' + groups[cat].map(function (a) {
+          var o = openBy[a.name];
+          var hist = D.log.filter(function (r) { return r.animal === a.name; });
+          var last = hist.length ? hist[hist.length - 1] : null;
+          return '<div class="tile ' + (o ? ageClass(o.out) : 'home') + '" onclick="openItem(\'' + jsq(a.name) + '\')">' +
+            '<div class="emoji">' + a.emoji + '</div>' +
+            '<div class="who"><div class="name">' + esc(a.name) + '</div>' +
+            '<div class="sub">' + (o
+              ? '<span class="dot out"></span>out with ' + esc(o.person)
+              : '<span class="dot homed"></span>home · ' + (last ? 'last out ' + fmtDay(last.out) : 'no outings yet')) +
+            '</div></div>' +
+            '<div class="end">' + (o
+              ? '<div class="big elapsed" data-ms="' + o.out + '">0:00</div><div class="tiny">since ' + fmtClock(o.out) + '</div>'
+              : '<div class="big" style="color:var(--sage)">' + hist.length + '</div><div class="tiny">outings</div>') +
+            '</div></div>';
+        }).join('') + '</div>';
+    }).join('');
+  }
+
+  function viewGear() {
+    var openBy = {};
+    openRows().forEach(function (r) { openBy[r.animal] = r; });
+    var groups = {}, order = [];
+    (D.gear || []).forEach(function (g) {
+      if (!groups[g.category]) { groups[g.category] = []; order.push(g.category); }
+      groups[g.category].push(g);
+    });
+    if (!order.length) {
+      return '<div class="empty"><div class="big">🧰</div><h2>No equipment yet</h2>' +
+             '<p>Add items on the Equipment tab of the spreadsheet.</p></div>';
+    }
+    return order.map(function (cat) {
+      var em = groups[cat][0].emoji;
+      return '<div class="species"><span>' + em + ' ' + esc(cat) + '</span><span class="rule"></span></div>' +
+        '<div class="grid">' + groups[cat].map(function (g) {
+          var o = openBy[g.name];
+          var hist = D.log.filter(function (r) { return r.animal === g.name; });
+          var last = hist.length ? hist[hist.length - 1] : null;
+          return '<div class="tile ' + (o ? ageClass(o.out) : 'home') + '" onclick="openItem(\'' + jsq(g.name) + '\')">' +
+            '<div class="emoji">' + g.emoji + '</div>' +
+            '<div class="who"><div class="name">' + esc(g.name) + '</div>' +
+            '<div class="sub">' + (o
+              ? '<span class="dot out"></span>out with ' + esc(o.person)
+              : '<span class="dot homed"></span>in · ' + (last ? 'last used ' + fmtDay(last.out) : 'not used yet')) +
+            '</div></div>' +
+            '<div class="end">' + (o
+              ? '<div class="big elapsed" data-ms="' + o.out + '">0:00</div><div class="tiny">since ' + fmtClock(o.out) + '</div>'
+              : '<div class="big" style="color:var(--sage)">' + hist.length + '</div><div class="tiny">uses</div>') +
+            '</div></div>';
+        }).join('') + '</div>';
+    }).join('');
+  }
+
+  function viewStaff() {
+    var m0 = monthStart();
+    return '<div class="grid">' + D.people.map(function (p) {
+      var outs = D.log.filter(function (r) { return r.person === p; });
+      var rets = D.log.filter(function (r) { return r.returnedBy === p; });
+      var mo = outs.filter(function (r) { return r.out >= m0; }).length;
+      var open = outs.filter(function (r) { return !r.inn; });
+      var aOut = open.filter(function (r) { return !isGear(r); }).length, gOut = open.length - aOut;
+      var active = open.length;
+      return '<div class="tile ' + (active ? '' : 'home') + '" onclick="openPerson(\'' + jsq(p) + '\')">' +
+        '<div class="emoji">👤</div>' +
+        '<div class="who"><div class="name">' + esc(p) + '</div>' +
+        '<div class="sub">' + (active
+          ? '<span class="dot out"></span>' + outNowLabel(aOut, gOut)
+          : outs.length + ' check-outs · ' + rets.length + ' returns') + '</div></div>' +
+        '<div class="end"><div class="big" style="color:var(--sage)">' + mo + '</div><div class="tiny">this month</div></div></div>';
+    }).join('') + '</div>';
+  }
+
+  function outNowLabel(aOut, gOut) {
+    var parts = [];
+    if (aOut) parts.push(aOut + ' animal' + (aOut > 1 ? 's' : ''));
+    if (gOut) parts.push(gOut + ' item' + (gOut > 1 ? 's' : ''));
+    return parts.join(' + ') + ' out now';
+  }
+
+  function viewHistory() {
+    var rows = D.log.slice().reverse();
+    if (query) {
+      var q = query.toLowerCase();
+      rows = rows.filter(function (r) {
+        return (r.animal + ' ' + r.category + ' ' + r.person + ' ' + r.returnedBy + ' ' + r.comments).toLowerCase().indexOf(q) >= 0;
+      });
+    }
+    var shown = rows.slice(0, 120);
+    var html = '<input class="search" id="q" type="search" placeholder="Search animal, equipment, person, or comment…" ' +
+      'value="' + esc(query) + '" oninput="query=this.value;renderHistoryOnly()">';
+    if (!shown.length) {
+      html += '<div class="empty"><div class="big">🔍</div><h2>Nothing found</h2><p>No outings match that search.</p></div>';
+    } else {
+      html += '<div class="rows">' + shown.map(rowHtml).join('') + '</div>';
+      if (rows.length > 120) html += '<p style="color:var(--sage);font-size:13px;margin-top:12px;text-align:center">Showing latest 120 of ' + rows.length + ' — refine the search to narrow down.</p>';
+    }
+    if (D.truncated) html += '<p style="color:var(--sage);font-size:12px;margin-top:8px;text-align:center">The oldest ' + D.truncated + ' outings live in the spreadsheet archive.</p>';
+    html += archiveLink();
+    return html;
+  }
+  function renderHistoryOnly() {
+    var q = document.getElementById('q');
+    var pos = q.selectionStart;
+    document.getElementById('content').innerHTML = viewHistory();
+    var q2 = document.getElementById('q');
+    q2.focus(); q2.setSelectionRange(pos, pos);
+  }
+
+  function rowHtml(r) {
+    var dur = r.inn ? '<span>' + fmtMin(durMin(r)) + '</span>' : '<span class="live">● LIVE</span>';
+    var ret = r.inn && r.returnedBy && r.returnedBy !== r.person
+      ? ' <b>· returned by ' + esc(r.returnedBy) + '</b>' : '';
+    return '<div class="row" onclick="this.classList.toggle(\'openrow\')">' +
+      '<div class="top"><span>' + r.emoji + '</span><span class="a">' + esc(r.animal) + '</span>' +
+      '<span class="p">with ' + esc(r.person) + '</span>' +
+      '<span class="d">' + fmtWhen(r.out) + ' · ' + dur + '</span></div>' +
+      '<div class="more">' +
+      '<b>Out:</b> ' + fmtWhen(r.out) + (r.inn ? ' &nbsp; <b>Back:</b> ' + fmtWhen(r.inn) : ' — still out') + ret + '<br>' +
+      (r.acts ? '<b>Did:</b> ' + esc(r.acts) + '<br>' : '') +
+      (r.mates ? '<b>With:</b> ' + esc(r.mates) + '<br>' : '') +
+      (r.comments ? '<b>Notes:</b> ' + esc(r.comments) : '') +
+      '</div></div>';
+  }
+
+  // ── detail modals ────────────────────────────────────────
+  function openItem(name) {
+    var a = null, gear = false;
+    D.animals.forEach(function (x) { if (x.name === name) a = x; });
+    if (!a) (D.gear || []).forEach(function (x) { if (x.name === name) { a = x; gear = true; } });
+    var hist = D.log.filter(function (r) { return r.animal === name; });
+    if (!a && hist.length) { gear = isGear(hist[hist.length - 1]); a = { emoji: hist[hist.length - 1].emoji, category: hist[hist.length - 1].category }; }
+    var open = hist.filter(function (r) { return !r.inn; })[0];
+    var mins = hist.map(durMin).filter(function (m) { return m != null; });
+    var total = mins.reduce(function (x, y) { return x + y; }, 0);
+    var avg = mins.length ? Math.round(total / mins.length) : 0;
+    var m0 = monthStart();
+    var noun = gear ? 'uses' : 'outings';
+    var html = '<div class="m-head"><div class="emoji">' + (a ? a.emoji : '🐾') + '</div>' +
+      '<div><h2>' + esc(name) + '</h2><div class="sub">' + esc(a ? a.category : '') + ' · ' +
+      (open ? 'out with ' + esc(open.person) + ' since ' + fmtClock(open.out) : (gear ? 'put away' : 'home in enclosure')) + '</div></div>' +
+      '<button class="m-close" onclick="closeModal()">✕</button></div>' +
+      '<div class="chipstats">' +
+      '<span class="chipstat"><b>' + hist.length + '</b> ' + noun + '</span>' +
+      '<span class="chipstat"><b>' + hist.filter(function (r) { return r.out >= m0; }).length + '</b> this month</span>' +
+      '<span class="chipstat"><b>' + fmtMin(total) + '</b> total time out</span>' +
+      '<span class="chipstat"><b>' + (avg ? fmtMin(avg) : '—') + '</b> avg ' + (gear ? 'use' : 'outing') + '</span></div>' +
+      '<div class="m-label">' + (gear ? 'Check-out history' : 'Outing history') + '</div>';
+    html += hist.length
+      ? '<div class="rows">' + hist.slice().reverse().slice(0, 25).map(rowHtml).join('') + '</div>'
+      : '<p style="color:var(--sage)">No ' + noun + ' recorded yet.</p>';
+    html += archiveLink();
+    showModal(html);
+  }
+  function openAnimal(name) { openItem(name); }
+
+  function archiveLink() {
+    return '<a class="archive-link" href="' + esc(D.logUrl || D.sheetUrl) + '" target="_blank" rel="noopener">' +
+      '📊 Complete archive — every outing ever, in the spreadsheet →</a>';
+  }
+
+  function openPerson(name) {
+    var outs = D.log.filter(function (r) { return r.person === name; });
+    var rets = D.log.filter(function (r) { return r.returnedBy === name && r.person !== name; });
+    var m0 = monthStart();
+    var mins = outs.map(durMin).filter(function (m) { return m != null; });
+    var total = mins.reduce(function (x, y) { return x + y; }, 0);
+    var d14 = nowMs() - 14 * 24 * 3600e3;
+    var recent14 = outs.filter(function (r) { return r.out >= d14; }).map(durMin)
+      .filter(function (m) { return m != null; })
+      .reduce(function (x, y) { return x + y; }, 0);
+    var openNow = outs.filter(function (r) { return !r.inn; });
+    var html = '<div class="m-head"><div class="emoji">👤</div>' +
+      '<div><h2>' + esc(name) + '</h2><div class="sub">' +
+      (openNow.length ? outNowLabel(openNow.filter(function (r) { return !isGear(r); }).length, openNow.filter(isGear).length) : 'nothing out now') + ' · ' +
+      outs.length + ' check-outs · ' + (rets.length + D.log.filter(function (r) { return r.returnedBy === name && r.person === name; }).length) + ' returns handled</div></div>' +
+      '<button class="m-close" onclick="closeModal()">✕</button></div>' +
+      '<div class="chipstats">' +
+      '<span class="chipstat"><b>' + fmtMin(recent14) + '</b> logged · last 14 days</span>' +
+      '<span class="chipstat"><b>' + fmtMin(total) + '</b> logged · all recorded</span>' +
+      '<span class="chipstat"><b>' + outs.filter(function (r) { return r.out >= m0; }).length + '</b> check-outs this month</span>' +
+      '<span class="chipstat"><b>' + rets.length + '</b> returns for colleagues</span></div>';
+    html += '<div class="m-label">Their check-outs</div>';
+    html += outs.length
+      ? '<div class="rows">' + outs.slice().reverse().slice(0, 20).map(rowHtml).join('') + '</div>'
+      : '<p style="color:var(--sage)">No check-outs yet.</p>';
+    if (rets.length) {
+      html += '<div class="m-label">Returned for colleagues</div><div class="rows">' +
+        rets.slice().reverse().slice(0, 10).map(rowHtml).join('') + '</div>';
+    }
+    html += archiveLink();
+    showModal(html);
+  }
+
+  function showModal(html) {
+    document.getElementById('modal').innerHTML = html;
+    document.body.classList.add('modal-open');
+    tick();
+  }
+  function closeModal() { document.body.classList.remove('modal-open'); }
+  function jsq(s) { return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+
+  // ── clock + live timers ──────────────────────────────────
+  function tick() {
+    document.querySelectorAll('.elapsed').forEach(function (el) {
+      el.textContent = liveElapsed(Number(el.dataset.ms));
+    });
+    document.getElementById('clock').textContent = fmtClock(nowMs());
+  }
+
+  refresh();
+  setInterval(tick, 1000);
+  setInterval(refresh, 30000);
+</script>
+
+</body></html>
