@@ -1,40 +1,145 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>The Prompts — Who Has The Kangaroo? (Build It With AI, Ep 1)</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='3' y='3' width='58' height='58' rx='18' fill='%236b3fa0' stroke='%23fff' stroke-width='5'/%3E%3Cellipse cx='34' cy='40' rx='13' ry='11' fill='%23ff8a5c'/%3E%3Ccircle cx='24' cy='24' r='8' fill='%23ff8a5c'/%3E%3Cellipse cx='20' cy='13' rx='3' ry='6' fill='%23ff8a5c'/%3E%3Ccircle cx='22' cy='23' r='1.8' fill='%232a1f3d'/%3E%3Cellipse cx='36' cy='43' rx='5' ry='4' fill='%23ffd2bd'/%3E%3C/svg%3E">
+<!-- IDENTITY: "Sticker Sheet" (EP1) — die-cut stickers with white edges, original kangaroo mascot, rounded type, grape/lime/sky/coral on cream. 11-27 identity rule. -->
 <style>
-:root{--paper:#f6f7f1;--card:#fff;--ink:#22301f;--muted:#5f6b58;--line:#d9e0d2;--deep:#233d2b;--forest:#2e5339;--gold:#c9a24b;--gold-ink:#7a5d1d;--code:#edf0e7}
-@media (prefers-color-scheme:dark){:root{--paper:#121812;--card:#1b231b;--ink:#e8eee2;--muted:#a3b09a;--line:#2c3a2c;--deep:#0d150e;--forest:#3f7350;--gold:#d7b25c;--gold-ink:#e3c37a;--code:#202a20}}
-*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif}
-a{color:var(--forest)}@media (prefers-color-scheme:dark){a{color:#9fd8b0}}
-.band{background:var(--deep);color:#fbf9f4;padding:44px 20px 40px}.band .in{max-width:960px;margin:0 auto}
-.eyebrow{font:600 13px Inter,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
-h1{font-family:Fraunces,Georgia,serif;font-weight:650;font-size:clamp(34px,6vw,56px);line-height:1.08;margin:10px 0 12px}
-.lede{font-size:19px;color:#cfdac9;max-width:680px;margin:0}
-main{max-width:960px;margin:0 auto;padding:34px 20px 60px}
-h2{font-family:Fraunces,Georgia,serif;font-weight:650;font-size:28px;margin:40px 0 8px}
-.muted{color:var(--muted)}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:18px 0}
-.tile{display:block;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;text-decoration:none;color:var(--ink);transition:transform .15s,border-color .15s}
-.tile:hover{transform:translateY(-2px);border-color:var(--gold)}
-.tile .big{font-size:34px}.tile b{display:block;font-size:19px;margin:6px 0 4px}.tile span{color:var(--muted);font-size:15px}
-.tip{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:16px 20px;margin:18px 0}
-.btn{display:inline-block;background:var(--forest);color:#fff!important;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:12px;margin:6px 8px 6px 0}
-.btn.alt{background:transparent;color:var(--forest)!important;border:1.5px solid var(--forest)}
-@media (prefers-color-scheme:dark){.btn.alt{color:#9fd8b0!important;border-color:#9fd8b0}}
-.prompt{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:16px 0;overflow:hidden}
-.prompt .head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
-.prompt .head b{font-size:16px}.prompt pre{margin:0;padding:16px;background:var(--code);white-space:pre-wrap;word-wrap:break-word;font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-.copy{background:var(--forest);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:600 14px Inter,sans-serif;cursor:pointer;flex:0 0 auto}
-footer{max-width:960px;margin:0 auto;padding:0 20px 40px;color:var(--muted);font-size:14px}
+:root{
+  --bg:#fbf6ec; --dots:rgba(107,63,160,.10); --card:#ffffff; --card-2:#f5effa; --ink:#2a1f3d; --mute:#5e5370; --line:#e6dcef;
+  --grape:#6b3fa0; --grape-ink:#ffffff; --grape-soft:#efe5fb; --lime:#79b83a; --lime-soft:#e6f4d7; --sky:#2f8fd0; --sky-soft:#dff0fb;
+  --coral:#e5533f; --coral-soft:#ffe5df; --sticker-edge:#ffffff; --link:#5b2f8f;
+  --shadow:0 2px 0 rgba(42,31,61,.10),0 10px 22px -10px rgba(42,31,61,.35);
+  --f:ui-rounded,"SF Pro Rounded","Arial Rounded MT Bold","Hiragino Maru Gothic ProN","Varela Round",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --b:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --m:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#1a1226; --dots:rgba(181,140,255,.09); --card:#251a35; --card-2:#2e2142; --ink:#f3ecff; --mute:#c3b6d8; --line:#3d2e55;
+  --grape:#b58cff; --grape-ink:#1a1226; --grape-soft:#33244a; --lime:#a6e05a; --lime-soft:#24361a; --sky:#6cc4ff; --sky-soft:#16304a;
+  --coral:#ff8a78; --coral-soft:#3e1f22; --sticker-edge:#f3ecff; --link:#cdb3ff;
+  --shadow:0 2px 0 rgba(0,0,0,.35),0 12px 26px -10px rgba(0,0,0,.7);}}
+:root[data-theme=dark]{
+  --bg:#1a1226; --dots:rgba(181,140,255,.09); --card:#251a35; --card-2:#2e2142; --ink:#f3ecff; --mute:#c3b6d8; --line:#3d2e55;
+  --grape:#b58cff; --grape-ink:#1a1226; --grape-soft:#33244a; --lime:#a6e05a; --lime-soft:#24361a; --sky:#6cc4ff; --sky-soft:#16304a;
+  --coral:#ff8a78; --coral-soft:#3e1f22; --sticker-edge:#f3ecff; --link:#cdb3ff;
+  --shadow:0 2px 0 rgba(0,0,0,.35),0 12px 26px -10px rgba(0,0,0,.7);}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;color:var(--ink);font:16.5px/1.6 var(--b);-webkit-font-smoothing:antialiased;
+  background:radial-gradient(var(--dots) 2px,transparent 2.5px) 0 0/26px 26px,var(--bg)}
+a{color:var(--link);text-underline-offset:3px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+@media(min-width:760px){.wrap{padding:0 28px}}
+/* brand bar */
+.bar{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:3px dashed var(--line)}
+.bar .wrap{display:flex;align-items:center;gap:12px;min-height:60px}
+.logo{width:38px;height:38px;flex:none;border-radius:13px;background:var(--grape);border:3px solid var(--sticker-edge);box-shadow:var(--shadow);display:grid;place-items:center;transform:rotate(-6deg)}
+.logo svg{width:28px;height:28px}
+.bar b{font:800 17px var(--f);letter-spacing:-.01em;white-space:nowrap}
+.pill{font:700 12px var(--f);color:var(--grape);background:var(--grape-soft);border-radius:999px;padding:5px 11px;white-space:nowrap}
+.sp{flex:1}
+.lnk{color:var(--mute);text-decoration:none;font:800 14px var(--f);white-space:nowrap}
+.lnk:hover{color:var(--ink)}
+.tbtn{appearance:none;border:3px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;width:40px;height:40px;font:800 15px var(--f);cursor:pointer;flex:none}
+@media(max-width:700px){.hide-s{display:none}}
+/* hero */
+.hero{display:grid;gap:22px;align-items:center;padding:40px 0 24px}
+@media(min-width:860px){.hero{grid-template-columns:1.25fr .9fr}}
+.eyebrow{display:inline-block;font:800 12.5px var(--f);letter-spacing:.1em;text-transform:uppercase;color:var(--grape-ink);background:var(--grape);border:3px solid var(--sticker-edge);border-radius:999px;padding:5px 13px;box-shadow:var(--shadow);transform:rotate(-2deg)}
+h1{font:900 clamp(34px,6vw,60px)/1.02 var(--f);letter-spacing:-.035em;margin:18px 0 14px}
+h1 .hi{background:linear-gradient(transparent 58%,var(--lime-soft) 58%);padding:0 .08em}
+.lede{font-size:18.5px;color:var(--mute);max-width:60ch;margin:0}
+.stage{position:relative;justify-self:center;width:min(360px,100%);aspect-ratio:1}
+.stage .roo-wrap{position:absolute;inset:6% 8% 0 8%;filter:drop-shadow(0 12px 18px rgba(42,31,61,.28));transform:rotate(4deg)}
+.stage .roo{width:100%;height:100%}
+.stage .tag{position:absolute;font:900 14px var(--f);padding:8px 14px;border-radius:999px;border:4px solid var(--sticker-edge);box-shadow:var(--shadow);white-space:nowrap}
+.stage .t1{top:6%;right:-2%;background:var(--sky);color:#fff;transform:rotate(8deg)}
+.stage .t2{bottom:10%;left:-4%;background:var(--coral);color:#fff;transform:rotate(-7deg)}
+.stage .t3{top:40%;right:-6%;background:var(--lime);color:#14200a;transform:rotate(-4deg)}
+@media(max-width:640px){.stage{width:min(300px,84%)}.stage .t1,.stage .t3{right:0}.stage .t2{left:0}.stage .tag{font-size:12.5px;padding:6px 11px}}
+@media (prefers-reduced-motion:no-preference){
+  .stage .roo-wrap{animation:hop 3.2s ease-in-out infinite}
+  @keyframes hop{0%,70%,100%{transform:translateY(0) rotate(4deg)}80%{transform:translateY(-16px) rotate(1deg)}90%{transform:translateY(0) rotate(5deg)}}
+}
+/* stickers */
+.sticker{position:relative;display:block;background:var(--card);border:5px solid var(--sticker-edge);outline:2px solid var(--line);border-radius:26px;padding:22px 22px 20px;box-shadow:var(--shadow);text-decoration:none;color:var(--ink);transform:rotate(var(--r,0deg));transition:transform .18s cubic-bezier(.3,1.6,.5,1)}
+.sticker:after{content:"";position:absolute;right:-5px;bottom:-5px;width:34px;height:34px;border-radius:0 0 22px 0;background:linear-gradient(135deg,transparent 50%,var(--card-2) 50%);box-shadow:-3px -3px 6px rgba(42,31,61,.12);opacity:.95}
+a.sticker:hover{transform:rotate(0deg) translateY(-4px) scale(1.02)}
+a.sticker:focus-visible{outline:3px solid var(--grape);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.badge{display:inline-grid;place-items:center;width:58px;height:58px;border-radius:50%;font-size:30px;border:4px solid var(--sticker-edge);box-shadow:var(--shadow);margin-bottom:8px}
+.b-grape{background:var(--grape-soft)} .b-sky{background:var(--sky-soft)} .b-lime{background:var(--lime-soft)} .b-coral{background:var(--coral-soft)}
+.sticker b{display:block;font:900 21px var(--f);letter-spacing:-.01em;margin:4px 0 4px}
+.sticker span{color:var(--mute);font-size:15px}
+.sheet{display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));margin:22px 0 10px}
+h2{font:900 clamp(26px,3.6vw,34px)/1.1 var(--f);letter-spacing:-.02em;margin:46px 0 8px;display:flex;align-items:center;gap:12px}
+h2 .num{display:inline-grid;place-items:center;flex:none;width:42px;height:42px;border-radius:50%;background:var(--coral);color:#fff;border:4px solid var(--sticker-edge);box-shadow:var(--shadow);font-size:18px;transform:rotate(-8deg)}
+h3{font:800 18px var(--f);margin:0 0 4px}
+.muted{color:var(--mute)}
+.tip{position:relative;background:var(--lime-soft);border:4px dashed var(--lime);border-radius:22px;padding:18px 22px 18px 74px;margin:22px 0}
+.tip:before{content:"🐾";position:absolute;left:18px;top:14px;width:42px;height:42px;display:grid;place-items:center;font-size:22px;background:var(--card);border-radius:50%;border:3px solid var(--sticker-edge);box-shadow:var(--shadow)}
+.btns{display:flex;flex-wrap:wrap;gap:12px;margin:14px 0}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--grape);color:var(--grape-ink)!important;text-decoration:none;font:900 15.5px var(--f);padding:13px 20px;border-radius:999px;border:4px solid var(--sticker-edge);box-shadow:var(--shadow);transition:transform .15s cubic-bezier(.3,1.6,.5,1)}
+.btn:hover{transform:translateY(-2px) rotate(-1deg)}
+.btn.alt{background:var(--card);color:var(--ink)!important;outline:2px solid var(--line)}
+.btn:focus-visible{outline:3px solid var(--coral);outline-offset:3px}
+.nouns{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 4px}
+.nouns span{font:800 14px var(--f);padding:7px 14px;border-radius:999px;border:3px solid var(--sticker-edge);box-shadow:var(--shadow);transform:rotate(var(--r,0deg))}
+footer{color:var(--mute);font-size:14px;padding:34px 0 54px;margin-top:46px;border-top:3px dashed var(--line);display:grid;gap:6px}
+code{font:13.5px var(--m);background:var(--card-2);border-radius:7px;padding:1px 6px}
+@media print{.bar,.tbtn,.stage{display:none!important}body{background:#fff;color:#000}.sticker{box-shadow:none;transform:none}}
+
+.ph{padding:40px 0 10px;display:grid;gap:18px;align-items:center}
+@media(min-width:860px){.ph{grid-template-columns:1fr 200px}}
+.ph .roo{width:190px;height:190px;justify-self:center;transform:rotate(-5deg);filter:drop-shadow(0 10px 14px rgba(42,31,61,.25))}
+.prompt{position:relative;background:var(--card);border:5px solid var(--sticker-edge);outline:2px solid var(--line);border-radius:24px;margin:22px 0 10px;box-shadow:var(--shadow);overflow:hidden}
+.prompt:nth-of-type(odd){transform:rotate(-.4deg)} .prompt:nth-of-type(even){transform:rotate(.4deg)}
+.prompt .head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-bottom:3px dashed var(--line);background:var(--grape-soft)}
+.prompt .head b{font:900 17px var(--f)}
+.prompt pre{margin:0;padding:16px 18px;background:var(--card);white-space:pre-wrap;word-wrap:break-word;font:14px/1.55 var(--m);color:var(--ink)}
+.copy{background:var(--grape);color:var(--grape-ink);border:3px solid var(--sticker-edge);border-radius:999px;padding:7px 15px;font:900 14px var(--f);cursor:pointer;flex:0 0 auto;box-shadow:var(--shadow)}
+.copy:focus-visible{outline:3px solid var(--coral);outline-offset:2px}
+main ol,main ul{padding-left:22px} main li{margin:6px 0}
+main ol li::marker{font:900 16px var(--f);color:var(--coral)}
+main h2{font-size:clamp(24px,3.2vw,30px)}
 </style></head><body>
-<div class="band"><div class="in">
-<div class="eyebrow">Build It With AI · Episode 1</div>
-<h1>The prompts, word for word</h1>
-<p class="lede">The exact prompts from the video, in order. Press Copy, paste into Claude or any capable AI, and change the nouns to whatever your business signs in and out.</p>
-</div></div>
-<main>
+<header class="bar"><div class="wrap">
+  <a href="index.html" class="logo" aria-label="Who Has The Kangaroo? home"><svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="36" cy="40" rx="15" ry="13" fill="#ff8a5c"/><circle cx="24" cy="24" r="10" fill="#ff8a5c"/><ellipse cx="19" cy="11" rx="3.5" ry="7.5" fill="#ff8a5c"/><ellipse cx="28" cy="10" rx="3.5" ry="7.5" fill="#ff8a5c"/><circle cx="22" cy="22" r="2.3" fill="#2a1f3d"/><ellipse cx="38" cy="44" rx="6.5" ry="5" fill="#ffd2bd"/></svg></a>
+  <b>Who Has The Kangaroo?</b><span class="pill hide-s">runs in your own Google Sheet · this page makes no network calls</span>
+  <span class="sp"></span>
+  <a class="lnk hide-s" href="https://jonathangeorgegatz.github.io/tools/" target="_blank" rel="noopener">More free tools</a>
+  <button class="tbtn" id="theme" type="button" aria-label="Toggle dark mode">◐</button>
+</div></header>
+<main class="wrap">
+<section class="ph">
+  <div>
+    <div class="eyebrow">Build It With AI · Episode 1</div>
+    <h1>The prompts, word for word</h1>
+    <p class="lede">The exact prompts from the video, in order. Press Copy, paste into Claude or any capable AI, and change the nouns to whatever your business signs in and out.</p>
+  </div>
+  <svg class="roo" width="190" height="190" viewBox="0 0 200 200" role="img" aria-label="A friendly kangaroo sticker" >
+<g stroke="#fff" stroke-width="10" stroke-linejoin="round" paint-order="stroke">
+<path d="M150 150 C185 160 196 175 194 186 C170 182 150 172 132 160 Z" fill="#e8743f"/>
+<ellipse cx="108" cy="128" rx="46" ry="50" fill="#ff8a5c"/>
+<path d="M78 160 L56 186 L100 186 L104 168 Z" fill="#e8743f"/>
+<path d="M112 168 L126 188 L150 188 L138 160 Z" fill="#e8743f"/>
+<circle cx="78" cy="66" r="30" fill="#ff8a5c"/>
+<ellipse cx="62" cy="30" rx="9" ry="20" fill="#ff8a5c" transform="rotate(-12 62 30)"/>
+<ellipse cx="86" cy="28" rx="9" ry="20" fill="#ff8a5c" transform="rotate(10 86 28)"/>
+<path d="M50 72 C40 76 38 86 48 88 C56 89 60 82 60 76 Z" fill="#ff8a5c"/>
+</g>
+<ellipse cx="62" cy="32" rx="4" ry="11" fill="#ffd2bd" transform="rotate(-12 62 32)"/>
+<ellipse cx="86" cy="30" rx="4" ry="11" fill="#ffd2bd" transform="rotate(10 86 30)"/>
+<ellipse cx="112" cy="140" rx="24" ry="22" fill="#ffd2bd"/>
+<path d="M90 136 Q112 126 134 136" stroke="#e8743f" stroke-width="4" fill="none" stroke-linecap="round"/>
+<circle cx="72" cy="62" r="5" fill="#2a1f3d"/><circle cx="73.6" cy="60.4" r="1.6" fill="#fff"/>
+<circle cx="47" cy="80" r="4" fill="#2a1f3d"/>
+<circle cx="86" cy="76" r="5" fill="#ffb3a1" opacity=".8"/>
+<path d="M98 100 C92 110 90 118 96 124" stroke="#e8743f" stroke-width="5" fill="none" stroke-linecap="round"/>
+<g class="roo-pouch-item"><rect x="102" y="120" width="22" height="16" rx="4" fill="#6b3fa0" stroke="#fff" stroke-width="3"/><path d="M106 124h14M106 129h9" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></g>
+</svg>
+</section>
+
 <p><a href="index.html">← Back to the demo and downloads</a></p>
 <div class="prompt"><div class="head"><b>Prompt 1 — The spec</b><button class="copy" data-k="1" type="button">Copy</button></div><pre id="p1">GOAL
 One screen that always knows which animals and which equipment are signed out,
@@ -96,8 +201,9 @@ still out that shouldn&#x27;t be.</pre></div><p class="muted" style="margin-top:
 <p class="muted">Prices checked October 2026 on the vendors' own pages.</p>
 <ul><li>Cheqroom: $184 per administrator per month, billed annually ($2,208 a year)</li><li>Asset Panda: no public price; you book a call and they quote you</li><li>EZOfficeInventory: from about $81 a month</li></ul>
 <p>If you run an actual animal shelter and need medical records, adoptions and state reporting, buy the real thing. Shelterluv charges $2 per completed adoption, and that's a fair deal.</p>
+
+<footer><div>From <b>Build It With AI</b>, Episode 1.</div><div>Made on <a href="https://www.youtube.com/@jonathangatz" target="_blank" rel="noopener">Build It With AI</a> · <a href="https://jonathangeorgegatz.github.io/tools/" target="_blank" rel="noopener">all the free tools</a></div></footer>
 </main>
-<footer>From <b>Build It With AI</b>, Episode 1.</footer>
 <script>
 document.querySelectorAll('.copy').forEach(function(b){b.addEventListener('click',function(){
  var t=document.getElementById('p'+b.dataset.k).textContent;
@@ -106,4 +212,5 @@ document.querySelectorAll('.copy').forEach(function(b){b.addEventListener('click
 });});
 function fallback(t){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove()}
 </script>
+<script>document.getElementById("theme").addEventListener("click",function(){var r=document.documentElement;r.dataset.theme=(r.dataset.theme==="dark"||(!r.dataset.theme&&matchMedia("(prefers-color-scheme: dark)").matches))?"light":"dark";});</script>
 </body></html>
